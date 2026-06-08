@@ -1,0 +1,37 @@
+[
+    {
+        "platform": "nds",
+        "name": "Nintendo DS",
+        "extensions": [".nds", ".zip"]
+    },
+    {
+        "platform": "dsi",
+        "name": "Nintendo DSi",
+        "extensions": [".nds", ".zip"]
+    },
+    {
+        "platform": "3ds",
+        "name": "Nintendo 3DS",
+        "extensions": [".cia", ".zip"]
+    },
+    {
+        "platform": "wii",
+        "name": "Nintendo Wii",
+        "extensions": [".rvz"]
+    },
+    {
+        "platform": "gc",
+        "name": "Nintendo GameCube",
+        "extensions": [".rvz"]
+    },
+    {
+        "platform": "nes",
+        "name": "Nintendo NES",
+        "extensions": [".nes"]
+    },
+    {
+        "platform": "snes",
+        "name": "Nintendo SNES",
+        "extensions": [".sfc"]
+    }
+]

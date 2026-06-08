@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hubbify - {{platform}} ROMs</title>
+    </head>
+    <body>
+        <h1>Hubbify</h1>
+        <h2>{{console.name}}</h2>
+        <ul>
+            {% for rom in roms %} <li><a href="/platform/{{console.platform}}/{{rom['url']}}">{{rom['name'] or rom['url']}}</a></li> {% endfor %}
+        </ul>
+    </body>
+</html>

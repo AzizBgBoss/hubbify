@@ -1,0 +1,4 @@
+roms/
+.env
+cache/
+__pycache__/

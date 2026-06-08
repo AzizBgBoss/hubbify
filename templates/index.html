@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hubbify</title>
+    </head>
+    <body>
+        <h1>Hubbify</h1>
+        <ul>
+            {% for console in consoles %} <li><a href="/platform/{{console.platform}}">{{console.name}}</a></li> {% endfor %}
+        </ul>
+    </body>
+</html>
