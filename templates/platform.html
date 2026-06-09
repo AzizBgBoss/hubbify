@@ -11,13 +11,20 @@
     <h2>{{console.name}}</h2>
     <div class="rom-list">
         {% for rom in roms %}
+        <a href="{{url_for('rom_file', platform=console.platform, filename=rom['url'])}}">
         <div class="rom-item">
             <img src="{{url_for('rom_file', platform=console.platform, filename=rom['boximage'])}}"
                 alt="{{rom['name'] or rom['url']}} box art" width="120" class="rom-image">
-            <a href="{{url_for('rom_file', platform=console.platform, filename=rom['url'])}}" class="rom-name">{{rom['url']}}</a>
+            <span class="rom-name">{{rom['url']}}</span>
         </div>
+        </a>
         {% endfor %}
     </div>
 </body>
+
+<footer>
+    <span>&copy; Hubbify - Made by AzizBgBoss</span>
+    <a href="https://github.com/AzizBgBoss/Hubbify">GitHub</a> - <a href="https://discord.gg/zfMwPhvDc4">Discord</a>
+</footer>
 
 </html>

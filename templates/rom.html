@@ -2,24 +2,27 @@
 <html lang="en">
 
 <head>
-    <title>Hubbify - {{console.name}} ROMs</title>
+    <title>Hubbify - {{game.name}}</title>
     <link rel="stylesheet" href="{{url_for('stylesheet')}}">
 </head>
 
 <body>
     <h1><a href="/">Hubbify</a></h1>
     <img src="{{url_for('rom_file', platform=game.platform, filename=game.image)}}" alt="{{game.name}} image"
-        width="50%">
-    <h2>
-        <ul>
-            <li>Name: {{game.name or game.url}}</li>
-            <li>Year: {{game.year or ""}}</li>
-            <li>Manufacturer: {{game.manufacturer or ""}}</li>
-            <li>Console: <a href="{{url_for('platform', platform=game.platform)}}">{{console.name}}</a></li>
-            <li>Filename: <a href="{{url_for('rom_file', platform=game.platform, filename=game.url)}}">{{game.name or game.url}}</a></li>
-        </ul>
-    </h2>
-    <p>{{game.description}}</p>
+        class="rom-image">
+    <ul class="rom-info">
+        <li>Name: {{game.name or game.url}}</li>
+        <li>Year: {{game.year or ""}}</li>
+        <li>Manufacturer: {{game.manufacturer or ""}}</li>
+        <li>Console: <a href="{{url_for('platform', platform=game.platform)}}">{{console.name}}</a></li>
+        <li>Download: <a href="{{url_for('download', platform=game.platform, filename=game.url)}}">{{game.url}}</a></li>
+    </ul>
+    <p class="rom-description">{{game.description}}</p>
 </body>
+
+<footer>
+    <span>&copy; Hubbify - Made by AzizBgBoss</span>
+    <a href="https://github.com/AzizBgBoss/Hubbify">GitHub</a> - <a href="https://discord.gg/zfMwPhvDc4">Discord</a>
+</footer>
 
 </html>

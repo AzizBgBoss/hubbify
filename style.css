@@ -1,6 +1,19 @@
+h1 {
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    color: #ff4141;
+    text-shadow: -5px 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+h2 {
+    text-align: center;
+    color: #ff4141;
+}
+
 body {
     background-color: #ffcece;
-    color: #fff;
+    color: #4b1e1e;
     font-family: sans-serif;
 }
 
@@ -13,14 +26,27 @@ a:hover {
     text-decoration: underline;
 }
 
+a .rom-item,
+a:hover .rom-item {
+    text-decoration: none;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    border-top: 2px solid #000;
+    padding: 20px;
+}
+
 .rom-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+    text-align: center;
 }
 
 .rom-item {
+    display: inline-block;
+    vertical-align: top;
+    width: 160px;
+    height: 250px;
     margin: 10px;
     padding: 10px;
     background-color: #fff;
@@ -28,8 +54,46 @@ a:hover {
     text-align: center;
     border-radius: 5px;
     overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    border-color: black;
+    box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.445);
+    border-color: gray;
     border-width: 1px;
     border-style: solid;
+}
+
+.rom-list a,
+.rom-list a:hover {
+    text-decoration: none;
+}
+
+.rom-item:hover {
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+}
+
+.rom-item img,
+.rom-item span,
+.rom-image {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rom-item span {
+    vertical-align: middle;
+    font-weight: bold;
+}
+
+.rom-image {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    width: 75%;
+}
+
+.rom-info {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.rom-description {
+    margin: 10px;
+    font-size: 20px;
 }

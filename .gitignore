@@ -1,4 +1,4 @@
 roms/
 .env
-cache/
 __pycache__/
+temp/
