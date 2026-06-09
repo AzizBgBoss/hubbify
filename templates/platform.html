@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Hubbify - {{platform}} ROMs</title>
-    </head>
-    <body>
-        <h1>Hubbify</h1>
-        <h2>{{console.name}}</h2>
-        <ul>
-            {% for rom in roms %} <li><a href="/platform/{{console.platform}}/{{rom['url']}}">{{rom['name'] or rom['url']}}</a></li> {% endfor %}
-        </ul>
-    </body>
+
+<head>
+    <title>Hubbify - {{console.name}} ROMs</title>
+    <link rel="stylesheet" href="{{url_for('stylesheet')}}">
+</head>
+
+<body>
+    <h1><a href="/">Hubbify</a></h1>
+    <h2>{{console.name}}</h2>
+    <div class="rom-list">
+        {% for rom in roms %}
+        <div class="rom-item">
+            <img src="{{url_for('rom_file', platform=console.platform, filename=rom['boximage'])}}"
+                alt="{{rom['name'] or rom['url']}} box art" width="120" class="rom-image">
+            <a href="{{url_for('rom_file', platform=console.platform, filename=rom['url'])}}" class="rom-name">{{rom['url']}}</a>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
 </html>

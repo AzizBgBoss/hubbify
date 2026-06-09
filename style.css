@@ -1,0 +1,35 @@
+body {
+    background-color: #ffcece;
+    color: #fff;
+    font-family: sans-serif;
+}
+
+a {
+    color: #ff4141;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.rom-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.rom-item {
+    margin: 10px;
+    padding: 10px;
+    background-color: #fff;
+    color: #000;
+    text-align: center;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+}

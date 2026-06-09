@@ -1,87 +1,92 @@
 # A self-hosted ROMs hosting site with database support for known downloaders (like Universal-Updater, Kekatsu, etc...) made by AzizBgBoss.
 
-from flask import Flask, render_template
-import json, os
+from flask import Flask, Response, render_template, send_from_directory
+import base64
+import os
 import scraper
-import threading
 
 app = Flask(__name__)
 ROMS_DIR = os.getenv("ROMS_DIR", "roms") # ROMs directory
-ROMS_META_DIR = os.getenv("ROMS_META_DIR", "roms") # ROMs metadata directory
-# Both can be the same btw but I made them different in case you wanna keep your ROMs folder intact
+DEFAULT_PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAIAAAC2BqGFAAAA+ElEQVR4nO3QQQ3AIADAQMDv"
+    "pCHEINt4emjFsk85mOX9uwEzGxgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgY"
+    "GBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgY"
+    "GBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgY"
+    "GBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgY"
+    "GBgYGBgYGBgYGBgYGBgYGBj4Eq8BXgAB0Y0kCwAAAABJRU5ErkJggg=="
+)
 
-# Make the roms metadata directory if it doesn't exist
-if not os.path.exists(ROMS_META_DIR):
-    os.makedirs(ROMS_META_DIR)
+def get_consoles():
+    consoles = []
 
-with open("metadata.json") as f:
-    consoles = json.load(f)
+    try:
+        platforms = os.listdir(ROMS_DIR)
+    except FileNotFoundError:
+        return consoles
 
-for console in consoles:
-    console_dir = os.path.join(ROMS_META_DIR, console["platform"])
-    if not os.path.exists(console_dir):
-        os.makedirs(console_dir)
-
-def update_metadata():
-    for console in consoles:
-        meta_path = os.path.join(ROMS_META_DIR, console["platform"], "metadata.json")
-        roms_dir = os.path.join(ROMS_DIR, console["platform"])
-        
-        if os.path.exists(meta_path):
-            with open(meta_path, "r") as f:
-                meta = json.load(f)
-        else:
-            meta = []
-        
-        try:
-            current_roms = set(f for f in os.listdir(roms_dir) if f.endswith(tuple(console["extensions"])))
-        except FileNotFoundError:
-            print(f"Warning: ROMs directory not found for {console['platform']}")
+    for platform in platforms:
+        platform_dir = os.path.join(ROMS_DIR, platform)
+        if not os.path.isdir(platform_dir):
             continue
-        
-        meta = [m for m in meta if m["url"] in current_roms]
-        
-        meta_urls = {m["url"] for m in meta}
-        for rom in current_roms:
-            if rom not in meta_urls:
-                game = scraper.get_game(os.path.join(roms_dir, rom))
-                meta.append({
-                    "url": rom,
-                    "name": game.get("game_title") if game else rom
-                })
-            else:
-                rom_entry = next(m for m in meta if m["url"] == rom)
-                if not rom_entry.get("name") or rom_entry["name"] == "":
-                    game = scraper.get_game(os.path.join(roms_dir, rom))
-                    rom_entry["name"] = game.get("game_title") if game else rom
-        
-        with open(meta_path, "w") as f:
-            json.dump(meta, f, indent=2)
 
-for console in consoles:
-    meta_path = os.path.join(ROMS_META_DIR, console["platform"], "metadata.json")
-    if not os.path.exists(meta_path):
-        with open(meta_path, "w") as f:
-            json.dump([], f)
+        dat_path = scraper.find_dat(platform_dir)
+        if dat_path is None:
+            continue
 
-metadata_thread = threading.Thread(target=update_metadata, daemon=True)
-metadata_thread.start()
-                    
+        header = scraper.parse_header(dat_path)
+        consoles.append({
+            "platform": platform,
+            "name": header.get("name") or platform,
+        })
+
+    return sorted(consoles, key=lambda console: console["name"].lower())
 
 @app.route("/")
 def index():
-    return render_template("index.html", consoles=consoles)
+    return render_template("index.html", consoles=get_consoles())
+
+@app.route("/default.png")
+def default_image():
+    return Response(DEFAULT_PNG, mimetype="image/png")
+
+@app.route("/style.css")
+def stylesheet():
+    return send_from_directory(app.root_path, "style.css")
 
 @app.route("/platform/<platform>")
 def platform(platform):
-    for console in consoles:
+    for console in get_consoles():
         if console["platform"] == platform:
             break
     else:
         return render_template("404.html"), 404
-    with open(os.path.join(ROMS_META_DIR, platform, "metadata.json")) as f:
-        roms = json.load(f)
+
+    roms = scraper.parse_platform(os.path.join(ROMS_DIR, platform))
     return render_template("platform.html", console=console, roms=roms)
 
+@app.route("/platform/<platform>/<path:filename>")
+def rom_file(platform, filename):
+    for console in get_consoles():
+        if console["platform"] == platform:
+            break
+    else:
+        return render_template("404.html"), 404
+    platform_dir = os.path.join(ROMS_DIR, platform)
+
+    if filename == "default.png":
+        return default_image()
+
+    if filename.startswith("media/"):
+        media_path = os.path.join(platform_dir, filename)
+        if os.path.exists(media_path):
+            return send_from_directory(platform_dir, filename)
+        return default_image()
+
+    game = scraper.get_game(os.path.join(platform_dir, filename))
+    if game is None:
+        return render_template("404.html"), 404
+    game["platform"] = platform
+    return render_template("rom.html", console=console, game=game)
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5550)

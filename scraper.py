@@ -1,101 +1,93 @@
-# We will use TheGamesDB, api.thegamesdb.net
+# After using Skraper, the following data will be made:
+# A .dat file in XML format
+# A media folder with images subfolder containing all the images
 
-import requests
-import json
 import os
-import hashlib
+from pathlib import PurePosixPath
+import glob
+import xml.etree.ElementTree as ET
 
-BASE_URL = "https://api.thegamesdb.net"
-API_KEY = os.getenv("API_KEY")
-CACHE_DIR = "cache"
 
-if not API_KEY:
-    print("WARNING: API_KEY environment variable not set. TheGamesDB API requests will fail.")
+def _text(parent, tag, default=""):
+    element = parent.find(tag)
+    if element is None or element.text is None:
+        return default
+    return element.text.strip()
 
-if not os.path.exists(CACHE_DIR):
-    os.makedirs(CACHE_DIR)
 
-def get_json(url):
-    cache_path = os.path.join(CACHE_DIR, url.split("/")[-1].replace("?apikey=" + (API_KEY or ""), "") + ".json")
-    if os.path.exists(cache_path):
-        with open(cache_path, "r") as f:
-            return json.load(f)
-    response = requests.get(url)
-    if not response.ok:
-        print(f"API Error: {response.status_code} - {response.text}")
+def parse_dat(path):
+    tree = ET.parse(path)
+    root = tree.getroot()
+    games = []
+    for game_element in root.findall("game"):
+        rom_element = game_element.find("rom")
+        if rom_element is None:
+            continue
+
+        rom_name = rom_element.get("name", "")
+        image_base = os.path.splitext(rom_name)[0] + ".png"
+        image_path = str(PurePosixPath("media", "images", image_base))
+        boximage_path = str(PurePosixPath("media", "box2dfront", image_base))
+
+        games.append({
+            "game_title": game_element.get("name", ""),
+            "name": game_element.get("name", ""),
+            "url": rom_name,
+            "description": _text(game_element, "description"),
+            "year": _text(game_element, "year"),
+            "manufacturer": _text(game_element, "manufacturer"),
+            "rom": {
+                "name": rom_name,
+                "size": rom_element.get("size", ""),
+            },
+            "image": image_path,
+            "boximage": boximage_path,
+        })
+
+    return games
+
+
+def parse_header(path):
+    tree = ET.parse(path)
+    root = tree.getroot()
+    header = root.find("header")
+
+    if header is None:
+        return {}
+
+    return {
+        "name": _text(header, "name"),
+        "description": _text(header, "description"),
+        "version": _text(header, "version"),
+        "date": _text(header, "date"),
+        "author": _text(header, "author"),
+        "url": _text(header, "url"),
+    }
+
+
+def find_dat(path):
+    dat_files = glob.glob(os.path.join(path, "*.dat"))
+    if not dat_files:
         return None
-    with open(cache_path, "w") as f:
-        json.dump(response.json(), f)
-    return response.json()
+    return dat_files[0]
 
-def md5(path):
-    if not os.path.exists(path):
-        return
-    with open(path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()
 
-def get_platform_id_by_name(name):
-    url = f"{BASE_URL}/v1/Platforms/ByPlatformName?apikey={API_KEY}&name={name}"
-    try:
-        response = get_json(url)
-        return response["data"]["platforms"][0]["id"]
-    except:
-        return
+def parse_platform(path):
+    games = []
 
-def get_game_by_hash(path):
-    if not os.path.exists(path):
-        return
-    
-    hash = md5(path)
-    url = f"{BASE_URL}/v1/Games/ByGameHash?apikey={API_KEY}&hash={hash}"
-    print(f"Hash: {hash}")
-    try:
-        response = get_json(url)
-        if response and "data" in response and "games" in response["data"] and len(response["data"]["games"]) > 0:
-            return response["data"]["games"][0]
-        else:
-            print(f"No games found for hash: {hash}")
-            return
-    except Exception as e:
-        print(f"Error getting game by hash: {e}")
-        return
+    for dat_path in glob.glob(os.path.join(path, "*.dat")):
+        games.extend(parse_dat(dat_path))
 
-def get_game_by_name(path):
-    if not os.path.exists(path):
-        return
-    
-    name = os.path.basename(path)
-    name = name.split(".")[0]
-    platform = os.path.basename(os.path.dirname(path))
-    platform_id = get_platform_id_by_name(platform)
-    if not platform_id:
-        print(f"Platform not found: {platform}")
-        return
-    
-    url = f"{BASE_URL}/v1/Games/ByGameName?apikey={API_KEY}&name={name}&platform={platform_id}"
-    print(f"Name: {name}")
-    try:
-        response = get_json(url)
-        if response and "data" in response and "games" in response["data"] and len(response["data"]["games"]) > 0:
-            return response["data"]["games"][0]
-        else:
-            print(f"No games found for name: {name}")
-            return
-    except Exception as e:
-        print(f"Error getting game by name: {e}")
-        return
+    return games
+
 
 def get_game(path):
+    rom_name = os.path.basename(path)
+    dat_dir = os.path.dirname(path)
 
-    print(f"Scraping {path}")
+    for dat_path in glob.glob(os.path.join(dat_dir, "*.dat")):
+        for game in parse_dat(dat_path):
+            if game["rom"]["name"] == rom_name:
+                return game
 
-    if not os.path.exists(path):
-        return
-    
-    game = get_game_by_hash(path)
-    if not game:
-        game = get_game_by_name(path)
-        if not game:
-            return
-    return game
-
+    return None
