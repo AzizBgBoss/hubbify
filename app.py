@@ -1,20 +1,39 @@
 # A self-hosted ROMs hosting site with database support for known downloaders (like Universal-Updater, Kekatsu, etc...) made by AzizBgBoss.
 
 from flask import Flask, Response, jsonify, render_template, send_from_directory
-import base64
+from urllib.parse import quote
+import json
 import os
 import scraper
+import PIL
+from PIL import Image
+import subprocess
 
 app = Flask(__name__)
-ROMS_DIR = os.getenv("ROMS_DIR", "roms") # ROMs directory
+ROMS_DIR = os.getenv("ROMS_DIR", "Roms") # ROMs directory
+CONSOLES_JSON = "consoles.json"
 DEFAULT_PNG = "default.png"
 TEMP_DIR = "temp"
+ASSET_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".mp4", ".mkv", ".avi"}
 
 _DS_PLATFORMS = ["nds", "gb", "gba", "nes", "snes", "dsi"]
 _3DS_PLATFORMS = _DS_PLATFORMS + ["3ds", "n64", "psx"]
 
+def load_console_metadata():
+    try:
+        with open(os.path.join(app.root_path, CONSOLES_JSON), encoding="utf-8") as metadata_file:
+            metadata = json.load(metadata_file)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+    if not isinstance(metadata, dict):
+        return {}
+    return metadata
+
 def get_consoles():
     consoles = []
+    systems = scraper.parse_systems(ROMS_DIR)
+    metadata = load_console_metadata()
 
     try:
         platforms = os.listdir(ROMS_DIR)
@@ -26,15 +45,21 @@ def get_consoles():
         if not os.path.isdir(platform_dir):
             continue
 
-        dat_path = scraper.find_dat(platform_dir)
-        if dat_path is None:
-            continue
-
-        header = scraper.parse_header(dat_path)
-        consoles.append({
+        system = systems.get(platform, {})
+        console_metadata = metadata.get(platform, {})
+        extensions = system.get("extensions") or console_metadata.get("extensions") or []
+        console = {
             "platform": platform,
-            "name": header.get("name") or platform,
-        })
+            "name": console_metadata.get("name") or system.get("name") or platform,
+            "extensions": extensions,
+            "manufacturer": console_metadata.get("manufacturer", ""),
+            "type": console_metadata.get("type", ""),
+            "generation": console_metadata.get("generation", ""),
+            "release_year": console_metadata.get("release_year", ""),
+            "description": console_metadata.get("description", ""),
+            "unistore_consoles": console_metadata.get("unistore_consoles", []),
+        }
+        consoles.append(console)
 
     return sorted(consoles, key=lambda console: console["name"].lower())
 
@@ -58,7 +83,7 @@ def platform(platform):
     else:
         return render_template("404.html"), 404
 
-    roms = scraper.parse_platform(os.path.join(ROMS_DIR, platform))
+    roms = scraper.parse_platform(os.path.join(ROMS_DIR, platform), console.get("extensions"))
     return render_template("platform.html", console=console, roms=roms)
 
 @app.route("/platform/<platform>/<path:filename>")
@@ -73,13 +98,13 @@ def rom_file(platform, filename):
     if filename == "default.png":
         return default_image()
 
-    if filename.startswith("media/"):
-        media_path = os.path.join(platform_dir, filename)
-        if os.path.exists(media_path):
+    extension = os.path.splitext(filename)[1].lower()
+    if filename.startswith(("media/", "images/", "downloaded_images/")) or extension in ASSET_EXTENSIONS:
+        if os.path.exists(os.path.join(platform_dir, filename)):
             return send_from_directory(platform_dir, filename)
         return default_image()
 
-    game = scraper.get_game(os.path.join(platform_dir, filename))
+    game = scraper.get_game(os.path.join(platform_dir, filename), console.get("extensions"))
     if game is None:
         return render_template("404.html"), 404
     game["platform"] = platform
@@ -89,33 +114,52 @@ def rom_file(platform, filename):
 def download(platform, filename):
     return send_from_directory(os.path.join(ROMS_DIR, platform), filename)
 
+@app.route("/api/uu/sheet.t3x")
+def universal_updater_spreadsheet():
+    return send_from_directory(app.root_path, "images/sheet.t3x")
+
 @app.route("/api/uu.unistore")
 def universal_updater():
+    host_url = os.getenv("HOST_URL") or ""
     unistore = {
         "storeInfo": {
                 "title": "Hubbify",
                 "author": "AzizBgBoss",
                 "description": "Hubbify - a retro game database",
-                "url": os.getenv("HOST_URL") + "api/uu.unistore",
+                "url": host_url + "api/uu.unistore",
                 "file": "uu.unistore",
-                "sheetURL": "",
-                "sheet": "",
+                "sheetURL": host_url + "api/uu/sheet.t3x",
+                "sheet": "sheet.t3x",
                 "bg_index": 1,
                 "bg_sheet": 0,
-                "revision": 1,
+                "revision": 11,
                 "version": 4
         },
         "storeContent": []
     }
 
+    iconidx = 1
+    image_entries = 0
+
+    # Generate the Universal-Updater icon spreadsheet.
+    images_dir = os.path.join(app.root_path, "images")
+    os.makedirs(images_dir, exist_ok=True)
+    t3spath = os.path.join(images_dir, "sheet.t3s")
+    with open(t3spath, "w", encoding="utf-8") as f:
+        f.write("--atlas -f rgba -z auto\n\n../default.png\n")
     for console in get_consoles():
-        for rom in scraper.parse_platform(os.path.join(ROMS_DIR, console["platform"])):
-            if console["platform"] in _DS_PLATFORMS or console["platform"] in _3DS_PLATFORMS:
+        for rom in scraper.parse_platform(os.path.join(ROMS_DIR, console["platform"]), console.get("extensions")):
+            unistore_consoles = console.get("unistore_consoles")
+            if not unistore_consoles and (console["platform"] in _DS_PLATFORMS or console["platform"] in _3DS_PLATFORMS):
+                unistore_consoles = ["3DS", "DS"] if console["platform"] in _DS_PLATFORMS else ["3DS"]
+
+            if unistore_consoles:
+                description = rom.get("description") or rom.get("desc") or ""
                 if rom["url"].endswith(".zip"):
                     downloads = [
                         {
                             "type": "downloadFile",
-                            "file": os.getenv("HOST_URL") + "dl/" + console["platform"] + "/" + rom["url"],
+                            "file": host_url + "dl/" + console["platform"] + "/" + quote(rom["url"]),
                             "output": "sdmc:/" + rom["url"],
                         },
                         {
@@ -126,7 +170,7 @@ def universal_updater():
                             "type": "extractFile",
                             "file": "sdmc:/" + rom["url"],
                             "input": "",
-                            "output": "sdmc:/" + rom["url"],
+                            "output": "sdmc:/roms/" + console["platform"] + "/",
                         },
                         {
                             "type": "deleteFile",
@@ -136,37 +180,59 @@ def universal_updater():
                 else:
                     downloads = [
                         {
-                            "type": "downloadFile",
-                            "file": os.getenv("HOST_URL") + "dl/" + console["platform"] + "/" + rom["url"],
-                            "output": "sdmc:/" + rom["url"],
-                        },
-                        {
                             "type": "mkdir",
                             "directory": "sdmc:/roms/" + console["platform"] + "/",
                         },
                         {
-                            "type": "move",
-                            "old": "sdmc:/" + rom["url"],
-                            "new": "sdmc:/roms/" + console["platform"] + "/" + rom["url"],
-                        }
+                            "type": "downloadFile",
+                            "file": host_url + "dl/" + console["platform"] + "/" + quote(rom["url"]),
+                            "output": "sdmc:/roms/" + console["platform"] + "/" + rom["url"],
+                        },
                     ]
+
+                icon_index = 0
+                if rom.get("marquee"):
+                    source_icon = os.path.join(ROMS_DIR, console["platform"], rom["marquee"])
+                    source_icon = scraper._normalize_rom_path(source_icon)
+                    output_icon_name = f"icon_{iconidx}.png"
+                    output_icon = os.path.join(images_dir, output_icon_name)
+
+                    try:
+                        icon = Image.open(source_icon)
+                        icon = icon.resize((48, 48)).convert("RGBA")
+                        icon.save(output_icon)
+                    except (OSError, ValueError):
+                        icon_index = 0
+                    else:
+                        icon_index = iconidx
+                        iconidx += 1
+                        image_entries += 1
+                        with open(t3spath, "a", encoding="utf-8") as f:
+                            f.write(f"{output_icon_name}\n")
 
                 content = {
                     "info": {
-                    "title": rom["name"],
-                    "author": rom["manufacturer"],
-                    "description": rom["description"].split(".")[0],
+                    "title": rom.get("name") or rom["url"],
+                    "author": rom.get("manufacturer") or rom.get("publisher") or rom.get("developer") or "Unknown",
+                    "description": description.split(".")[0] if description else "",
                     "category": [console["name"]],
-                    "console": ["3DS", "DS"] if console["platform"] in _DS_PLATFORMS else ["3DS"],
-                    "icon_index": 0,
+                    "console": unistore_consoles,
+                    "icon_index": icon_index,
                     "sheet_index": 0,
-                    "last_updated": rom["year"],
+                    "last_updated": rom.get("year") or rom.get("releasedate") or "",
                     "license": "none",
-                    "version": "0"
+                    "version": "0",
+                    "stars": int(float(rom.get("rating")) * 20) if rom.get("rating") else 0,
                 },
                     "Install ROM to /roms/" + console["platform"] + "/": downloads
                 }
                 unistore["storeContent"].append(content)
+    
+    if image_entries:
+        tex3ds = os.path.join(app.root_path, "tools", "tex3ds_x86_64_win.exe")
+        outputt3x = os.path.join(images_dir, "sheet.t3x")
+        subprocess.run([tex3ds, "-i", t3spath, "-o", outputt3x], check=True)
+        print(f"Generated {outputt3x}")
 
     return jsonify(unistore)
 

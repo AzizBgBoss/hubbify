@@ -9,8 +9,9 @@
 <body>
     <h1><a href="/">Hubbify</a></h1>
     <ul>
-        {% for console in consoles %} <li><a href="/platform/{{console.platform}}">{{console.name}}</a></li> {% endfor
-        %}
+        {% for console in consoles %}
+        <li><a href="{{url_for('platform', platform=console.platform)}}">{{console.name}}</a></li>
+        {% endfor %}
     </ul>
 </body>
 

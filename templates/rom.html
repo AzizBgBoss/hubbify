@@ -12,12 +12,22 @@
         class="rom-image">
     <ul class="rom-info">
         <li>Name: {{game.name or game.url}}</li>
-        <li>Year: {{game.year or ""}}</li>
-        <li>Manufacturer: {{game.manufacturer or ""}}</li>
+        <li>Year: {{game.year or "Unknown"}}</li>
+        <li>Released: {{game.releasedate or "Unknown"}}</li>
+        <li>Rating: {{game.rating or "Unrated"}}</li>
+        <li>Developer: {{game.developer or "Unknown"}}</li>
+        <li>Publisher: {{game.publisher or "Unknown"}}</li>
+        <li>Manufacturer: {{game.manufacturer or "Unknown"}}</li>
+        <li>Genre: {{game.genre or "Unknown"}}</li>
+        <li>Players: {{game.players or "Unknown"}}</li>
+        <li>Favorite: {{game.favorite or "No"}}</li>
+        <li>Play count: {{game.playcount or "0"}}</li>
+        <li>Last played: {{game.lastplayed or "Never"}}</li>
+        <li>ROM size: {{game.rom.size or "Unknown"}}</li>
         <li>Console: <a href="{{url_for('platform', platform=game.platform)}}">{{console.name}}</a></li>
         <li>Download: <a href="{{url_for('download', platform=game.platform, filename=game.url)}}">{{game.url}}</a></li>
     </ul>
-    <p class="rom-description">{{game.description}}</p>
+    <p class="rom-description">{{game.description or "No description available."}}</p>
 </body>
 
 <footer>

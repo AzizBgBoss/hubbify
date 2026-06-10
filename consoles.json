@@ -1,0 +1,137 @@
+{
+  "3ds": {
+    "name": "Nintendo 3DS",
+    "manufacturer": "Nintendo",
+    "type": "Handheld",
+    "generation": "Eighth generation",
+    "release_year": "2011",
+    "description": "Dual-screen handheld with stereoscopic 3D support.",
+    "extensions": [".3ds", ".3dsx", ".cia", ".cxi"],
+    "unistore_consoles": ["3DS"]
+  },
+  "dsiware": {
+    "name": "Nintendo DSiWare",
+    "manufacturer": "Nintendo",
+    "type": "Handheld digital games",
+    "generation": "Seventh generation",
+    "release_year": "2008",
+    "description": "Downloadable games and apps for Nintendo DSi and Nintendo 3DS systems.",
+    "extensions": [".nds", ".dsi", ".cia"],
+    "unistore_consoles": ["3DS", "DS"]
+  },
+  "extras": {
+    "name": "Extras",
+    "manufacturer": "",
+    "type": "Collection",
+    "generation": "",
+    "release_year": "",
+    "description": "Extra files, tools, homebrew, or uncategorized downloads.",
+    "extensions": [".exe", ".html", ".htm"]
+  },
+  "gb": {
+    "name": "Nintendo Game Boy",
+    "manufacturer": "Nintendo",
+    "type": "Handheld",
+    "generation": "Fourth generation",
+    "release_year": "1989",
+    "description": "Nintendo's original portable cartridge-based console.",
+    "extensions": [".gb", ".gbc", ".zip"],
+    "unistore_consoles": ["3DS", "DS"]
+  },
+  "gba": {
+    "name": "Nintendo Game Boy Advance",
+    "manufacturer": "Nintendo",
+    "type": "Handheld",
+    "generation": "Sixth generation",
+    "release_year": "2001",
+    "description": "32-bit handheld successor to the Game Boy Color.",
+    "extensions": [".gba", ".zip"],
+    "unistore_consoles": ["3DS"]
+  },
+  "gc": {
+    "name": "Nintendo GameCube",
+    "manufacturer": "Nintendo",
+    "type": "Home console",
+    "generation": "Sixth generation",
+    "release_year": "2001",
+    "description": "Nintendo's compact disc-based home console.",
+    "extensions": [".iso", ".gcm", ".rvz", ".ciso"]
+  },
+  "jar": {
+    "name": "Java ME",
+    "manufacturer": "Sun Microsystems",
+    "type": "Mobile games",
+    "generation": "",
+    "release_year": "1999",
+    "description": "Java mobile games and apps packaged as JAR files.",
+    "extensions": [".jar"]
+  },
+  "n64": {
+    "name": "Nintendo 64",
+    "manufacturer": "Nintendo",
+    "type": "Home console",
+    "generation": "Fifth generation",
+    "release_year": "1996",
+    "description": "Nintendo's 64-bit cartridge-based home console.",
+    "extensions": [".n64", ".z64", ".v64", ".zip"],
+    "unistore_consoles": ["3DS"]
+  },
+  "nds": {
+    "name": "Nintendo DS",
+    "manufacturer": "Nintendo",
+    "type": "Handheld",
+    "generation": "Seventh generation",
+    "release_year": "2004",
+    "description": "Dual-screen handheld with touch controls.",
+    "extensions": [".nds", ".zip"],
+    "unistore_consoles": ["3DS", "DS"]
+  },
+  "nes": {
+    "name": "Nintendo Entertainment System",
+    "manufacturer": "Nintendo",
+    "type": "Home console",
+    "generation": "Third generation",
+    "release_year": "1983",
+    "description": "Nintendo's 8-bit home console.",
+    "extensions": [".nes", ".zip"],
+    "unistore_consoles": ["3DS", "DS"]
+  },
+  "ps2": {
+    "name": "PlayStation 2",
+    "manufacturer": "Sony",
+    "type": "Home console",
+    "generation": "Sixth generation",
+    "release_year": "2000",
+    "description": "Sony's DVD-based second PlayStation console.",
+    "extensions": [".iso", ".chd", ".cso", ".bin"]
+  },
+  "psx": {
+    "name": "PlayStation",
+    "manufacturer": "Sony",
+    "type": "Home console",
+    "generation": "Fifth generation",
+    "release_year": "1994",
+    "description": "Sony's original CD-based PlayStation console.",
+    "extensions": [".bin", ".cue", ".chd", ".pbp", ".zip"],
+    "unistore_consoles": ["3DS"]
+  },
+  "snes": {
+    "name": "Super Nintendo Entertainment System",
+    "manufacturer": "Nintendo",
+    "type": "Home console",
+    "generation": "Fourth generation",
+    "release_year": "1990",
+    "description": "Nintendo's 16-bit home console.",
+    "extensions": [".sfc", ".smc", ".zip"],
+    "unistore_consoles": ["3DS", "DS"]
+  },
+  "wii": {
+    "name": "Nintendo Wii",
+    "manufacturer": "Nintendo",
+    "type": "Home console",
+    "generation": "Seventh generation",
+    "release_year": "2006",
+    "description": "Motion-control-focused Nintendo home console.",
+    "extensions": [".iso", ".wbfs", ".rvz", ".ciso"]
+  }
+}

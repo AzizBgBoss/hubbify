@@ -9,13 +9,34 @@
 <body>
     <h1><a href="/">Hubbify</a></h1>
     <h2>{{console.name}}</h2>
+    {% if console.manufacturer or console.release_year or console.type or console.generation or console.description %}
+    <div class="console-info">
+        {% if console.description %}
+        <p>{{console.description}}</p>
+        {% endif %}
+        <ul>
+            {% if console.manufacturer %}
+            <li>Manufacturer: {{console.manufacturer}}</li>
+            {% endif %}
+            {% if console.release_year %}
+            <li>Released: {{console.release_year}}</li>
+            {% endif %}
+            {% if console.type %}
+            <li>Type: {{console.type}}</li>
+            {% endif %}
+            {% if console.generation %}
+            <li>Generation: {{console.generation}}</li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
     <div class="rom-list">
         {% for rom in roms %}
         <a href="{{url_for('rom_file', platform=console.platform, filename=rom['url'])}}">
         <div class="rom-item">
-            <img src="{{url_for('rom_file', platform=console.platform, filename=rom['boximage'])}}"
+            <img src="{{url_for('rom_file', platform=console.platform, filename=(rom['marquee'] or 'default.png'))}}"
                 alt="{{rom['name'] or rom['url']}} box art" width="120" class="rom-image">
-            <span class="rom-name">{{rom['url']}}</span>
+            <span class="rom-name">{{rom['name'] or rom['url']}}</span>
         </div>
         </a>
         {% endfor %}
