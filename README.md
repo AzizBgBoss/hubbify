@@ -11,6 +11,7 @@ It also has a Universal-Updater feed at `/api/uu.unistore`.
 - Pillow
 - A ROMs folder organized by platform (emulationstation style)
 - `tools/tex3ds_x86_64_win.exe` if you want Universal-Updater icon sheets
+- `tools/skyscraper_x86_64_win.exe` if you want to scrape game metadata and artwork
 
 Example ROM folder:
 
@@ -39,7 +40,7 @@ Set your ROM folder and public server URL. You can put these in `.env`, or set t
 
 ```text
 HOST_URL="http://192.168.1.12:5550/"
-ROMS_DIR="C:\\Users\\Aziz\\Desktop\\Roms"
+ROMS_DIR="D:\\Roms"
 ```
 
 `HOST_URL` should be the address your other devices can use to reach Hubbify. `ROMS_DIR` should point at your ROM collection.
@@ -65,6 +66,39 @@ Useful routes:
 - `/dl/<platform>/<filename>` - download a ROM
 - `/api/uu.unistore` - Universal-Updater store file
 - `/api/uu/sheet.t3x` - Universal-Updater icon sheet
+
+## Scraping with Skyscraper
+
+Hubbify works best when each platform folder has a `gamelist.xml` and media folders. The included batch file at `tools/scrape.bat` can do that with Skyscraper.
+
+The batch uses the Skyscraper files in `tools`:
+
+```text
+tools/
+  scrape.bat
+  skyscraper_x86_64_win.exe
+  skyscraper_artwork.xml
+  tex3ds_x86_64_win.exe
+```
+
+Run it from the project folder:
+
+```bat
+tools\scrape.bat
+```
+
+It will ask for your ROMs directory:
+
+```text
+ROMs directory: D:\Roms
+```
+
+For each platform in the `PLATFORMS` list, it does two passes:
+
+- Scrapes metadata and artwork from ScreenScraper
+- Generates `gamelist.xml` and writes media into that platform's `media` folder
+
+If you add or remove systems, edit the `PLATFORMS` line in the batch file. The format is `folder:skyscraper_platform`, so `dsiware:nds` means "use the `dsiware` folder, but scrape it as the `nds` platform."
 
 ## Metadata
 
